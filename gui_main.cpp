@@ -29,6 +29,14 @@ void gui_setup(int argc, char **argv) {
             {"Finish dear Board"}
         }
     });
+    BOARDS.push_back({
+        "New board",
+        {
+            {"Statically link engine to Gerber2PDFGui"}, 
+            {"Start working on SCRPG Project"}, 
+            {"Finish dear Board"}
+        }
+    });
     ImGui::GetStyle().WindowMinSize = ImVec2(200, 200);
 }
 
@@ -39,9 +47,20 @@ static std::optional<Board> new_board_function();
 
 void gui_loop() {
     size_t index = 0;
+    ImGui::SetNextWindowPos({20.0, 20.0});
     for (Board &board: BOARDS) {
-        render_board(index, &board);
-        render_board_context_menu(index, &board);
+        std::stringstream window_id;
+        window_id << board.title;
+        window_id << "###" << index;
+        ImGui::Begin(window_id.str().c_str());
+            render_board_context_menu(index, &board);
+            render_board(index, &board);
+            {
+                auto next_pos = ImGui::GetWindowPos();
+                next_pos.x += ImGui::GetWindowWidth() + 20;
+                ImGui::SetNextWindowPos(next_pos);
+            }
+        ImGui::End();
         index++;
     }
     if(auto board = new_board_function()) {
@@ -51,10 +70,6 @@ void gui_loop() {
 
 
 static void render_board(size_t board_index, Board *board) {
-    std::stringstream window_id;
-    window_id << board->title;
-    window_id << "###" << board_index;
-    ImGui::Begin(window_id.str().c_str());
     static size_t editing_index = SIZE_MAX;
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10.0, 10.0));
     size_t index = 0;
@@ -98,14 +113,9 @@ static void render_board(size_t board_index, Board *board) {
         index ++;
     }
     ImGui::PopStyleVar();
-    ImGui::End();
 }
 
 static void render_board_context_menu(size_t board_index, Board *board) {
-    std::stringstream window_id;
-    window_id << board->title;
-    window_id << "###" << board_index;
-    ImGui::Begin(window_id.str().c_str());
     if(ImGui::BeginPopupContextWindow("", 1, false)) {
         ImGui::Text("Rename board: ");
         if(ImGui::InputText("", &board->title, ImGuiInputTextFlags_EnterReturnsTrue)) {
@@ -117,9 +127,15 @@ static void render_board_context_menu(size_t board_index, Board *board) {
         ImGui::SetKeyboardFocusHere();
         ImGui::EndPopup();
     }
-    ImGui::End();
 }
 
 static std::optional<Board> new_board_function() {
+    if(!ImGui::IsAnyWindowHovered() &&
+        ImGui::IsMouseDoubleClicked(0)) {
+        return Board {
+            "New Board",
+            {}
+        };
+    }
     return {};
 }
