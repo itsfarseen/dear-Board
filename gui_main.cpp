@@ -1,5 +1,6 @@
 #include "gui_main.hpp"
 #include <cmath>
+#include <fstream>
 #include <imgui.h>
 #include <imgui_stdlib.h>
 #include <iostream>
@@ -36,25 +37,12 @@ struct Board {
 };
 
 std::vector<Board> BOARDS; 
+static void save_to_disk(); 
+static void load_from_disk(); 
 
 void gui_setup(int argc, char **argv) {
-    BOARDS.push_back({
-        "Backlog",
-        {
-            {"Statically link engine to Gerber2PDFGui"}, 
-            {"Start working on SCRPG Project"}, 
-            {"Finish dear Board"}
-        }
-    });
-    BOARDS.push_back({
-        "New board",
-        {
-            {"Statically link engine to Gerber2PDFGui"}, 
-            {"Start working on SCRPG Project"}, 
-            {"Finish dear Board"}
-        }
-    });
     ImGui::GetStyle().WindowMinSize = ImVec2(200, 200);
+    load_from_disk();
 }
 
 static void render_board(size_t index, Board *board);
@@ -76,14 +64,10 @@ void gui_loop() {
         std::stringstream window_id;
         window_id << board.title;
         window_id << "###" << index;
-        ImGui::Begin(window_id.str().c_str());
+        ImGui::Begin(window_id.str().c_str()); 
+        {
             auto action = render_board_context_menu(index, &board);
             render_board(index, &board);
-            {
-                auto next_pos = ImGui::GetWindowPos();
-                next_pos.x += ImGui::GetWindowWidth() + 20;
-                ImGui::SetNextWindowPos(next_pos);
-            }
             switch(action) {
                 case ContextMenuAction::None:
                     break;
@@ -101,6 +85,7 @@ void gui_loop() {
                     ImGui::OpenPopup("###MOVE_ENTRY");
                     break;
             }
+
             if(ImGui::BeginPopup("###DELETE_BOARD")) {
                 ImGui::Text("Delete board");
                 ImGui::Separator();
@@ -110,19 +95,23 @@ void gui_loop() {
                     BOARDS.erase(BOARDS.begin()+index);
                     break_the_loop = true;
                     ImGui::CloseCurrentPopup();
+                    save_to_disk();
                 }
                 ImGui::EndPopup();
             }
+
             if(ImGui::BeginPopup("###RENAME_BOARD")) {
                 ImGui::Text("Rename board");
                 ImGui::Separator();
                 if(ImGui::InputText("###BOARD_RENAME", &board.title_new, ImGuiInputTextFlags_EnterReturnsTrue)) {
                     board.title = board.title_new;
                     ImGui::CloseCurrentPopup();
+                    save_to_disk();
                 }
                 if(ImGui::Button("Rename")) {
                     board.title = board.title_new;
                     ImGui::CloseCurrentPopup();
+                    save_to_disk();
                 }
                 ImGui::SameLine();
                 if(ImGui::Button("Cancel")) {
@@ -130,6 +119,7 @@ void gui_loop() {
                 }
                 ImGui::EndPopup();
             }
+
             if(ImGui::BeginPopup("###DELETE_ENTRY")) {
                 assert(board.hovered_index != SIZE_MAX);
                 ImGui::Text("Delete entry");
@@ -140,9 +130,11 @@ void gui_loop() {
                 if(ImGui::Button("Delete")) {
                     board.items.erase(board.items.begin()+board.hovered_index);
                     ImGui::CloseCurrentPopup();
+                    save_to_disk();
                 }
                 ImGui::EndPopup();
             }
+
             if(ImGui::BeginPopup("###MOVE_ENTRY")) {
                 auto entry_index = board.hovered_index;
                 assert(entry_index != SIZE_MAX);
@@ -167,15 +159,29 @@ void gui_loop() {
                     from_board.items.erase(from_board.items.begin() + entry_index);
                     to_board.items.push_back(entry);
                     ImGui::CloseCurrentPopup();
+                    save_to_disk();
                 }
                 ImGui::EndPopup();
             }
+
+            if(ImGui::IsWindowHovered() &&
+               ImGui::IsAnyItemHovered() &&
+               ImGui::IsMouseDoubleClicked(0)) {
+                   board.items.push_back({"New Entry"});
+            }
+            {
+                auto next_pos = ImGui::GetWindowPos();
+                next_pos.x += ImGui::GetWindowWidth() + 20;
+                ImGui::SetNextWindowPos(next_pos);
+            }
+        }
         ImGui::End();
         if(break_the_loop) break;
         index++;
     }
     if(auto board = new_board_function()) {
         BOARDS.push_back(*board);
+        save_to_disk();
     }
 }
 
@@ -193,12 +199,14 @@ static void render_board(size_t board_index, Board *board) {
                             ImGuiInputTextFlags_EnterReturnsTrue|
                             ImGuiInputTextFlags_AutoSelectAll)) {
                 board->editing_index = SIZE_MAX;
+                save_to_disk();
             }
             if(!ImGui::IsItemFocused()) {
                 ImGui::SetKeyboardFocusHere();
             }
             if(ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape), false)) {
                 board->editing_index = SIZE_MAX;
+                save_to_disk();
             }
         } else {
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10.0, 10.0));
@@ -233,8 +241,9 @@ static void render_board(size_t board_index, Board *board) {
            !ImGui::IsItemHovered()) {
             board->hovered_index = SIZE_MAX;
         }
-        if (ImGui::IsItemClicked()) {
+        if (board->editing_index == SIZE_MAX && ImGui::IsItemClicked()) {
             entry.is_done = !entry.is_done;
+            save_to_disk();
         }
         if(ImGui::IsItemClicked() && ImGui::IsMouseDoubleClicked(0)) {
             board->editing_index = index;
@@ -285,4 +294,74 @@ static std::optional<Board> new_board_function() {
         };
     }
     return {};
+}
+
+
+static void save_to_disk() {
+    auto file = std::ofstream("dear_board.data");
+    for(auto const &board: BOARDS) {
+        file << "#" << board.title << std::endl;
+        for(auto const &item: board.items) {
+            if(item.is_done) {
+                file << "[x] ";
+            } else {
+                file << "[ ] ";
+            }
+            for(char c: item.text) {
+                if(c == '\n') {
+                    file << "\n... ";
+                } else {
+                    file << c;
+                }
+            }
+            file << std::endl;
+        }
+        file << std::endl;
+        file << std::endl;
+    }
+}
+
+static void load_from_disk() {
+    auto file = std::ifstream("dear_board.data");
+    if(!file.good()) return;
+    std::string line; 
+
+    BOARDS.clear();
+    while(true) {
+        std::getline(file, line);
+        if(file.eof()) break;
+
+        if(line[0] == '#') {
+            Board b;
+            b.title = std::string(line.c_str()+1);
+
+            while(true) {
+                std::getline(file, line);
+                if(file.eof()) break;
+
+                if(line[0] == '[' && line[2] == ']') {
+                    bool is_done = line[1] == 'x';
+                    Item item {std::string(line.c_str()+4)};
+                    item.is_done = is_done;
+                    b.items.push_back(std::move(item));
+                } else if(line[0] == '.' && 
+                          line[1] == '.' && 
+                          line[2] == '.') {
+                    Item &item = b.items.back();
+                    item.text += "\n";
+                    item.text += std::string(line.c_str()+4);
+                } else {
+                    break;
+                }
+            }
+
+            BOARDS.push_back(std::move(b));
+            std::getline(file, line);
+            // To getrid of last of the two empty lines after each board.
+        } else {
+            std::cerr << "ERROR: Malformed data file" << std::endl;
+            break;
+        }
+    }
+
 }
