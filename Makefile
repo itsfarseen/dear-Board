@@ -14,7 +14,7 @@ BuildDir := build
 
 Objects  := $(Sources:%.cpp=%.o)
 
-CXXFLAGS := $(Includes:%=-I%)
+CXXFLAGS := $(Includes:%=-I%) -g
 LDLIBS   := $(Libraries:%=-l%)
 
 CXXFLAGS += --std=c++17
@@ -27,4 +27,7 @@ Dear_Board: $(Objects:%=$(BuildDir)/%)
 $(BuildDir)/%.o: %.cpp
 	mkdir -p $(@D)
 	$(CXX) -c $(CXXFLAGS) $< -o $@
+
+clean:
+	rm -rf $(BuildDir)
 
