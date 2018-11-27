@@ -1,4 +1,5 @@
 #include "gui_main.hpp"
+#include <cmath>
 #include <imgui.h>
 #include <imgui_stdlib.h>
 #include <iostream>
@@ -6,6 +7,9 @@
 #include <sstream>
 #include <string>
 #include <vector>
+
+static inline ImVec2 operator+(const ImVec2& lhs, const ImVec2& rhs)            { return ImVec2(lhs.x+rhs.x, lhs.y+rhs.y); }
+static inline ImVec2 operator-(const ImVec2& lhs, const ImVec2& rhs)            { return ImVec2(lhs.x-rhs.x, lhs.y-rhs.y); }
 
 struct Item {
     std::string text;
@@ -16,6 +20,7 @@ struct Item {
 struct Board {
     std::string title;
     std::vector<Item> items;
+    size_t editing_index = SIZE_MAX;
 };
 
 std::vector<Board> BOARDS; 
@@ -39,7 +44,6 @@ void gui_setup(int argc, char **argv) {
     });
     ImGui::GetStyle().WindowMinSize = ImVec2(200, 200);
 }
-
 
 static void render_board(size_t index, Board *board);
 static void render_board_context_menu(size_t index, Board *board);
@@ -70,27 +74,29 @@ void gui_loop() {
 
 
 static void render_board(size_t board_index, Board *board) {
-    static size_t editing_index = SIZE_MAX;
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10.0, 10.0));
     size_t index = 0;
     for(auto &entry: board->items) {
         ImGui::PushID(index);
         ImGui::PushItemWidth(ImGui::GetWindowContentRegionWidth());
         ImGui::BeginGroup();
-        if(editing_index == index) {
-            ImGui::SetKeyboardFocusHere();
+        if(board->editing_index == index) {
             if(ImGui::InputTextMultiline("##ENTRY", 
                             &entry.text, 
                             ImVec2(0.0, 0.0),
                             ImGuiInputTextFlags_EnterReturnsTrue|
                             ImGuiInputTextFlags_AutoSelectAll)) {
-                editing_index = SIZE_MAX;
+                board->editing_index = SIZE_MAX;
+            }
+            if(!ImGui::IsItemFocused()) {
+                ImGui::SetKeyboardFocusHere();
             }
             if(ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape), false)) {
-                editing_index = SIZE_MAX;
+                board->editing_index = SIZE_MAX;
             }
         } else {
-            ImGui::Checkbox("##CHECK_BOX", &entry.is_done);
+            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10.0, 10.0));
+            bool is_done_copy = entry.is_done;
+            ImGui::Checkbox("##CHECK_BOX", &is_done_copy);
             ImGui::SameLine();
             if(entry.is_done) {
                 ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(100, 100, 100, 255));
@@ -99,20 +105,20 @@ static void render_board(size_t board_index, Board *board) {
             } else {
                 ImGui::TextWrapped(entry.text.c_str());
             }
+            ImGui::PopStyleVar();
+            ImGui::Separator();
         }
         ImGui::EndGroup();
         ImGui::PopItemWidth();
-        if(ImGui::IsItemClicked() && ImGui::IsMouseDoubleClicked(0)) {
-            editing_index = index;
-        }
-        if (ImGui::IsItemClicked() && !ImGui::IsMouseDoubleClicked(0)) {
+        if (ImGui::IsItemClicked()) {
             entry.is_done = !entry.is_done;
         }
-        ImGui::Separator();
+        if(ImGui::IsItemClicked() && ImGui::IsMouseDoubleClicked(0)) {
+            board->editing_index = index;
+        }
         ImGui::PopID();
         index ++;
     }
-    ImGui::PopStyleVar();
 }
 
 static void render_board_context_menu(size_t board_index, Board *board) {
