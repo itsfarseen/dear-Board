@@ -97,6 +97,11 @@ void gui_loop() {
                     ImGui::CloseCurrentPopup();
                     save_to_disk();
                 }
+                ImGui::SameLine();
+                if(ImGui::Button("Cancel") ||
+                   ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape), false)) {
+                    ImGui::CloseCurrentPopup();
+                }
                 ImGui::EndPopup();
             }
 
@@ -114,7 +119,8 @@ void gui_loop() {
                     save_to_disk();
                 }
                 ImGui::SameLine();
-                if(ImGui::Button("Cancel")) {
+                if(ImGui::Button("Cancel") ||
+                   ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape), false)) {
                     ImGui::CloseCurrentPopup();
                 }
                 ImGui::EndPopup();
@@ -131,6 +137,11 @@ void gui_loop() {
                     board.items.erase(board.items.begin()+board.hovered_index);
                     ImGui::CloseCurrentPopup();
                     save_to_disk();
+                }
+                ImGui::SameLine();
+                if(ImGui::Button("Cancel") ||
+                   ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape), false)) {
+                    ImGui::CloseCurrentPopup();
                 }
                 ImGui::EndPopup();
             }
@@ -149,7 +160,8 @@ void gui_loop() {
                     }
                     index ++;
                 }
-                if(ImGui::MenuItem("Cancel")) {
+                if(ImGui::MenuItem("Cancel") ||
+                   ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape), false)) {
                     ImGui::CloseCurrentPopup();
                 }
                 if(selected_index != SIZE_MAX) {
