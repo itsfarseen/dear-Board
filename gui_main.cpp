@@ -165,7 +165,7 @@ void gui_loop() {
             }
 
             if(ImGui::IsWindowHovered() &&
-               ImGui::IsAnyItemHovered() &&
+               board.hovered_index == SIZE_MAX &&
                ImGui::IsMouseDoubleClicked(0)) {
                    board.items.push_back({"New Entry"});
             }
