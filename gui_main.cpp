@@ -1,5 +1,6 @@
 #include "gui_main.hpp"
 #include "models.hpp"
+#include "widgets.hpp"
 #include <cmath>
 #include <fstream>
 #include <imgui.h>
@@ -42,10 +43,16 @@ void gui_loop() {
         std::stringstream window_id;
         window_id << board.title;
         window_id << "###" << index;
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0,0));
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0,0));
         ImGui::Begin(window_id.str().c_str()); 
         {
-            auto action = render_board_context_menu(index, &board);
+
             render_board(index, &board);
+            ImGui::PopStyleVar();
+            ImGui::PopStyleVar();
+
+            auto action = render_board_context_menu(index, &board);
             switch(action) {
                 case ContextMenuAction::None:
                     break;
@@ -179,10 +186,10 @@ void gui_loop() {
 static void render_board(size_t board_index, Board *board) {
     size_t index = 0;
     for(auto &entry: board->items) {
-        ImGui::PushID(index);
-        ImGui::PushItemWidth(ImGui::GetWindowContentRegionWidth());
-        ImGui::BeginGroup();
         if(board->editing_index == index) {
+            ImGui::PushID(index);
+            ImGui::PushItemWidth(ImGui::GetWindowContentRegionWidth());
+            ImGui::BeginGroup();
             if(ImGui::InputTextMultiline("##ENTRY", 
                             &entry.text, 
                             ImVec2(0.0, 0.0),
@@ -198,47 +205,50 @@ static void render_board(size_t board_index, Board *board) {
                 board->editing_index = SIZE_MAX;
                 save_to_disk();
             }
+            ImGui::EndGroup();
+            ImGui::PopItemWidth();
+            if(ImGui::IsItemHovered()) {
+                board->hovered_index = index;
+            }
+            if(ImGui::IsWindowHovered() && 
+            board->hovered_index == index &&
+            !ImGui::IsItemHovered()) {
+                board->hovered_index = SIZE_MAX;
+            }
+            if (board->editing_index == SIZE_MAX && ImGui::IsItemClicked()) {
+                entry.is_done = !entry.is_done;
+                save_to_disk();
+            }
+            if(ImGui::IsItemClicked() && ImGui::IsMouseDoubleClicked(0)) {
+                board->editing_index = index;
+            }
+            ImGui::PopID();
         } else {
-            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(10.0, 10.0));
-                bool is_done_copy = entry.is_done;
-                ImGui::Checkbox("##CHECK_BOX", &is_done_copy);
-                // IsItemClicked() on the whole group will flip entry.is_done
-                // Here a temporary is created for Checkbox() to avoid double flipping
-
-                ImGui::SameLine();
-                ImU32 text_color = ImGui::GetColorU32(ImGuiCol_Text);
-                bool is_hovered = board->hovered_index == index;
-                if(entry.is_done) {
-                    text_color = is_hovered?
-                                    IM_COL32(100, 100, 150, 255):
-                                    IM_COL32(100, 100, 100, 255);
-                } else if(is_hovered) {
-                    text_color = IM_COL32(100, 100, 255, 255);
-                }
-                ImGui::PushStyleColor(ImGuiCol_Text, text_color);
-                    ImGui::TextWrapped(entry.text.c_str());
-                ImGui::PopStyleColor();
-            ImGui::PopStyleVar();
-            ImGui::Separator();
+            ItemWidgetAction item_action = ItemWidget(index, entry, false, board->hovered_index == index);
+            switch(item_action) {
+                case ItemWidgetAction::HoverEnter:
+                    board->hovered_index = index;
+                    break;
+                case ItemWidgetAction::HoverExit:
+                    if(ImGui::IsWindowHovered()) // ? FIXME
+                        board->hovered_index = SIZE_MAX;
+                    break;
+                case ItemWidgetAction::ItemUpdated:
+                    save_to_disk();
+                    break;
+                case ItemWidgetAction::RequestEdit:
+                    board->editing_index = index;
+                    break;
+                case ItemWidgetAction::RequestFocus:
+                    // TODO
+                    break;
+                case ItemWidgetAction::RequestContextMenu:
+                    // TODO
+                    break;
+                case ItemWidgetAction::None:
+                    break;
+            }
         }
-        ImGui::EndGroup();
-        ImGui::PopItemWidth();
-        if(ImGui::IsItemHovered()) {
-            board->hovered_index = index;
-        }
-        if(ImGui::IsWindowHovered() && 
-           board->hovered_index == index &&
-           !ImGui::IsItemHovered()) {
-            board->hovered_index = SIZE_MAX;
-        }
-        if (board->editing_index == SIZE_MAX && ImGui::IsItemClicked()) {
-            entry.is_done = !entry.is_done;
-            save_to_disk();
-        }
-        if(ImGui::IsItemClicked() && ImGui::IsMouseDoubleClicked(0)) {
-            board->editing_index = index;
-        }
-        ImGui::PopID();
         index ++;
     }
 }
