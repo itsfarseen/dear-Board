@@ -1,4 +1,5 @@
 #include "gui_main.hpp"
+#include "models.hpp"
 #include <cmath>
 #include <fstream>
 #include <imgui.h>
@@ -12,29 +13,6 @@
 static inline ImVec2 operator+(const ImVec2& lhs, const ImVec2& rhs)            { return ImVec2(lhs.x+rhs.x, lhs.y+rhs.y); }
 static inline ImVec2 operator-(const ImVec2& lhs, const ImVec2& rhs)            { return ImVec2(lhs.x-rhs.x, lhs.y-rhs.y); }
 
-struct Item {
-    std::string text;
-    bool is_done = false;
-    Item(std::string text) : text(text) {}
-};
-
-struct Board {
-    std::string title;
-    std::vector<Item> items;
-
-    //////////////////////////////////////
-    // UI Stuff 
-    //////////////////////////////////////
-
-    size_t editing_index = SIZE_MAX;
-    // Which item is being edited
-
-    size_t hovered_index = SIZE_MAX;
-    // which item is being hovered
-
-    std::string title_new;
-    // Used as a buffer while renaming the board
-};
 
 std::vector<Board> BOARDS; 
 static void save_to_disk(); 
