@@ -1,3 +1,6 @@
+#ifndef __MODELS_HPP__
+#define __MODELS_HPP__
+
 #include <string>
 #include <vector>
 
@@ -24,3 +27,6 @@ struct Board {
     std::string title_new;
     // Used as a buffer while renaming the board
 };
+
+
+#endif // __MODELS_HPP__
