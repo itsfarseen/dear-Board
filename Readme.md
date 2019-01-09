@@ -19,7 +19,7 @@ http://unlicense.org/
 If you find any bugs or have any features that you like to see implemented,
 please open an issue or pull request.
 
-## Special thanks
+## Acknowledgements
 Omar Cornut ([github](https://github.com/ocornut), [website](http://www.miracleworld.net/))
 for the lightweight yet productive [dear ImGui](https://github.com/ocornut/imgui/) library.
 
