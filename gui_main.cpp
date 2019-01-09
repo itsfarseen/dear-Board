@@ -10,17 +10,36 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <unistd.h>
 
 static inline ImVec2 operator+(const ImVec2& lhs, const ImVec2& rhs)            { return ImVec2(lhs.x+rhs.x, lhs.y+rhs.y); }
 static inline ImVec2 operator-(const ImVec2& lhs, const ImVec2& rhs)            { return ImVec2(lhs.x-rhs.x, lhs.y-rhs.y); }
 
 
-std::vector<Board> BOARDS; 
-static void save_to_disk(); 
-static void load_from_disk(); 
+std::vector<Board> BOARDS;
+ImFont *FONT = NULL;
+
+static void save_to_disk();
+static void load_from_disk();
 
 void gui_setup(int argc, char **argv) {
     ImGui::GetStyle().WindowMinSize = ImVec2(200, 200);
+    auto prog_path = std::string(argv[0]);
+    int last_slash = prog_path.rfind('/');
+    std::string prog_dir;
+    if(last_slash == -1) {
+        prog_dir = "";
+    } else {
+        prog_dir = prog_path.substr(0, last_slash);
+    }
+    auto font_path = prog_dir + "/fonts/FiraSans-Regular.ttf";
+    if(access(font_path.c_str(), R_OK) == 0) {
+        FONT = ImGui::GetIO().Fonts->AddFontFromFileTTF(font_path.c_str(), 15.0f);
+    } else {
+        std::cout << "Warning: Couldn't load fonts. The UI may appear ugly. \n";
+        std::cout << "   " << font_path << " not found\n";
+    }
+
     load_from_disk();
 }
 
@@ -36,6 +55,7 @@ static ContextMenuAction render_board_context_menu(size_t index, Board *board);
 static std::optional<Board> new_board_function();
 
 void gui_loop() {
+    if(FONT) {ImGui::PushFont(FONT);}
     size_t index = 0;
     ImGui::SetNextWindowPos({20.0, 20.0});
     bool break_the_loop = false;
@@ -45,7 +65,7 @@ void gui_loop() {
         window_id << "###" << index;
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0,0));
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0,0));
-        ImGui::Begin(window_id.str().c_str()); 
+        ImGui::Begin(window_id.str().c_str());
         {
 
             render_board(index, &board);
@@ -180,6 +200,7 @@ void gui_loop() {
         BOARDS.push_back(*board);
         save_to_disk();
     }
+    if(FONT) {ImGui::PopFont();}
 }
 
 
@@ -190,8 +211,8 @@ static void render_board(size_t board_index, Board *board) {
             ImGui::PushID(index);
             ImGui::PushItemWidth(ImGui::GetWindowContentRegionWidth());
             ImGui::BeginGroup();
-            if(ImGui::InputTextMultiline("##ENTRY", 
-                            &entry.text, 
+            if(ImGui::InputTextMultiline("##ENTRY",
+                            &entry.text,
                             ImVec2(0.0, 0.0),
                             ImGuiInputTextFlags_EnterReturnsTrue|
                             ImGuiInputTextFlags_AutoSelectAll)) {
@@ -210,7 +231,7 @@ static void render_board(size_t board_index, Board *board) {
             if(ImGui::IsItemHovered()) {
                 board->hovered_index = index;
             }
-            if(ImGui::IsWindowHovered() && 
+            if(ImGui::IsWindowHovered() &&
             board->hovered_index == index &&
             !ImGui::IsItemHovered()) {
                 board->hovered_index = SIZE_MAX;
@@ -324,7 +345,7 @@ static void save_to_disk() {
 static void load_from_disk() {
     auto file = std::ifstream("dear_board.data");
     if(!file.good()) return;
-    std::string line; 
+    std::string line;
 
     BOARDS.clear();
     while(true) {
@@ -344,8 +365,8 @@ static void load_from_disk() {
                     Item item {std::string(line.c_str()+4)};
                     item.is_done = is_done;
                     b.items.push_back(std::move(item));
-                } else if(line[0] == '.' && 
-                          line[1] == '.' && 
+                } else if(line[0] == '.' &&
+                          line[1] == '.' &&
                           line[2] == '.') {
                     Item &item = b.items.back();
                     item.text += "\n";
