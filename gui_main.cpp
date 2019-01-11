@@ -92,10 +92,10 @@ void gui_loop() {
             }
 
             if(ImGui::BeginPopup("###DELETE_BOARD")) {
-                ImGui::Text("Delete board");
+                ImGui::TextUnformatted("Delete board");
                 ImGui::Separator();
-                ImGui::Text(board.title.c_str());
-                ImGui::Text("This action is irreversible");
+                ImGui::TextUnformatted(board.title.c_str());
+                ImGui::TextUnformatted("This action is irreversible");
                 if(ImGui::Button("Delete")) {
                     BOARDS.erase(BOARDS.begin()+index);
                     break_the_loop = true;
@@ -111,7 +111,7 @@ void gui_loop() {
             }
 
             if(ImGui::BeginPopup("###RENAME_BOARD")) {
-                ImGui::Text("Rename board");
+                ImGui::TextUnformatted("Rename board");
                 ImGui::Separator();
                 if(ImGui::InputText("###BOARD_RENAME", &board.title_new, ImGuiInputTextFlags_EnterReturnsTrue)) {
                     board.title = board.title_new;
@@ -133,11 +133,11 @@ void gui_loop() {
 
             if(ImGui::BeginPopup("###DELETE_ENTRY")) {
                 assert(board.hovered_index != SIZE_MAX);
-                ImGui::Text("Delete entry");
+                ImGui::TextUnformatted("Delete entry");
                 ImGui::Separator();
                 auto entry = board.items[board.hovered_index];
-                ImGui::Text(entry.text.c_str());
-                ImGui::Text("This action is irreversible");
+                ImGui::TextUnformatted(entry.text.c_str());
+                ImGui::TextUnformatted("This action is irreversible");
                 if(ImGui::Button("Delete")) {
                     board.items.erase(board.items.begin()+board.hovered_index);
                     ImGui::CloseCurrentPopup();
@@ -154,7 +154,7 @@ void gui_loop() {
             if(ImGui::BeginPopup("###MOVE_ENTRY")) {
                 auto entry_index = board.hovered_index;
                 assert(entry_index != SIZE_MAX);
-                ImGui::Text("Move entry");
+                ImGui::TextUnformatted("Move entry");
                 ImGui::Separator();
                 size_t index = 0;
                 size_t selected_index = SIZE_MAX;
@@ -279,7 +279,7 @@ static ContextMenuAction render_board_context_menu(size_t board_index, Board *bo
     if(ImGui::BeginPopupContextWindow(NULL, 1, false)) {
         if(board->hovered_index != SIZE_MAX) {
             ImGui::Separator();
-            ImGui::Text("Entry");
+            ImGui::TextUnformatted("Entry");
             ImGui::Separator();
             if(ImGui::MenuItem("Delete")) {
                 action = ContextMenuAction::DeleteEntry;
@@ -291,7 +291,7 @@ static ContextMenuAction render_board_context_menu(size_t board_index, Board *bo
             }
         }
         ImGui::Separator();
-        ImGui::Text("Board");
+        ImGui::TextUnformatted("Board");
         ImGui::Separator();
         if(ImGui::MenuItem("Rename")) {
             action = ContextMenuAction::RenameBoard;

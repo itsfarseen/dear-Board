@@ -19,6 +19,7 @@ LDLIBS   := $(Libraries:%=-l%)
 
 CXXFLAGS += --std=c++17
 CXXFLAGS += -Wall -Werror
+CXXFLAGS += -Wformat -Wformat-security 
 
 
 Dear_Board: $(Objects:%=$(BuildDir)/%)

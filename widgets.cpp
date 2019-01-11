@@ -43,7 +43,7 @@ ItemWidgetAction ItemWidget(int index, Item &item, bool is_focused, bool is_hove
             }
 
             ImGui::PushStyleColor(ImGuiCol_Text, text_color);
-                ImGui::TextWrapped(item.text.c_str());
+                ImGui::TextWrapped("%s", item.text.c_str());
             ImGui::PopStyleColor();
 
         ImGui::PopStyleVar();
