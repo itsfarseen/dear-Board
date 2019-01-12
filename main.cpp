@@ -1,6 +1,9 @@
 #include <iostream>
 #include <string>
 #include <iostream>
+#include <chrono>
+#include <thread>
+
 #include <GLFW/glfw3.h>
 
 #include <imgui.h>
@@ -63,6 +66,7 @@ int main(int argc, char** argv) {
 
     glfwSetWindowSizeCallback(window, window_resize_cb);
     while (!glfwWindowShouldClose(window)) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(17));
         glfwPollEvents();
         int display_w, display_h;
         glfwGetFramebufferSize(window, &display_w, &display_h);
