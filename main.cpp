@@ -21,8 +21,9 @@ static void draw_frame(GLFWwindow *window, int display_w, int display_h) {
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
+	//GUI looping
     gui_loop();
-
+	
     ImGui::Render();
     glViewport(0, 0, display_w, display_h);
     glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
@@ -39,6 +40,7 @@ static void window_resize_cb(GLFWwindow *window, int display_w, int display_h) {
 }
 
 int main(int argc, char** argv) {
+	printf("Started: IMGUI");
     glfwSetErrorCallback(glfw_error_callback);
     if (!glfwInit())
         return 1;
