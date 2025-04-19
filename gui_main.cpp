@@ -2,6 +2,7 @@
 #include "models.hpp"
 #include "widgets.hpp"
 #include <cmath>
+#include <cstdint>
 #include <fstream>
 #include <imgui.h>
 #include <imgui_stdlib.h>

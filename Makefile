@@ -18,7 +18,7 @@ CXXFLAGS := $(Includes:%=-I%) -g
 LDLIBS   := $(Libraries:%=-l%)
 
 CXXFLAGS += --std=c++17
-CXXFLAGS += -Wall -Werror
+CXXFLAGS += -Werror
 CXXFLAGS += -Wformat -Wformat-security 
 
 

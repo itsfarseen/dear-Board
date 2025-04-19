@@ -1,6 +1,7 @@
 #ifndef __MODELS_HPP__
 #define __MODELS_HPP__
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
