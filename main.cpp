@@ -12,7 +12,7 @@
 
 #include "gui_main.hpp"
 
-static const ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+static const ImVec4 clear_color = ImVec4(0.01f, 0.01f, 0.01f, 1.00f);
 
 static void glfw_error_callback(int error, const char* description) {
     std::cerr << "Glfw Error "<<error<<" "<<description<<"\n";

@@ -38,7 +38,7 @@ void gui_setup(int argc, char **argv) {
   }
   auto font_path = prog_dir + "/fonts/FiraSans-Regular.ttf";
   if (access(font_path.c_str(), R_OK) == 0) {
-    FONT = ImGui::GetIO().Fonts->AddFontFromFileTTF(font_path.c_str(), 15.0f);
+    FONT = ImGui::GetIO().Fonts->AddFontFromFileTTF(font_path.c_str(), 18.0f);
   } else {
     std::cout << "Warning: Couldn't load fonts. The UI may appear ugly. \n";
     std::cout << "   " << font_path << " not found\n";

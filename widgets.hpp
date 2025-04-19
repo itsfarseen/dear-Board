@@ -2,6 +2,7 @@
 #define __WIDGETS_HPP__
 
 #include "models.hpp"
+#include <imgui.h>
 
 /*
  * - Focus of children are managed by parents.
@@ -11,6 +12,7 @@
  *   or similar event occurs.
  * - The parent should propagate up the request if the parent is not focused.
  */
+
 
 enum class ItemWidgetAction {
     None,
