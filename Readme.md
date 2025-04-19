@@ -4,6 +4,8 @@
 A minimalist kanban board app written in C++, 
 to keep track of my projects and todos.
 
+![Screenshot](./screenshot.png)
+
 ### Dependencies: 
 * OpenGL2
 * GLFW
